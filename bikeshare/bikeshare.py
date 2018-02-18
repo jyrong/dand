@@ -12,7 +12,8 @@ for i in range(1, 13):
     num_days.append(calendar.monthrange(2017, i)[1])
 
 def get_city():
-    '''asks the user for a city and returns the filename for that city's bike share data
+    '''asks the user for a city and returns the filename for
+    the city's bike share data
 
     args:
         non.
@@ -21,7 +22,8 @@ def get_city():
     '''
 
     city = input('\nHello! Let\'s explore some US bikeshare data!\n'
-                 'Would you like to see data for Chicago, New York, or Washington?\n')
+                    'Would you like to see data for Chicago, New York,'
+                    ' or Washington?\n')
     if city.title() == 'Chicago':
         city = chicago
     elif city.title() == 'New York':
@@ -196,8 +198,10 @@ def popular_stations(city_file, month, day):
         2. (str) selected month for a city's bikeshare data
         3. (str) selected day for a city's bikeshare data
     returns:
-        1. (str) the most popular start station for the city over the time period
-        2. (str) the most popular end station for the city over the time period
+        1. (str) the most popular start station for
+                the city over the time period
+        2. (str) the most popular end station for
+                the city over the time period
     '''
 
     df = df_filter(city_file, month, day)
@@ -226,7 +230,7 @@ def popular_trip(city_file, month, day):
 
 
 def users(city_file, month, day):
-    '''returns the counts of each user type (customer or subscriber)
+    '''returns the counts of each user type ('Customer' or 'Subscriber')
     for a specificed city and a predetermined time period
 
     args:
@@ -234,41 +238,75 @@ def users(city_file, month, day):
         2. (str) selected month for a city's bikeshare data
         3. (str) selected day for a city's bikeshare data
     returns:
-
+        1. (int) the count of 'Customer'
+        2. (int) the count of 'Subscriber'
     '''
-    # TODO: complete function
+
+    df = df_filter(city_file, month, day)
+    cust = df['User Type'].value_counts()['Customer']
+    subs = df['User Type'].value_counts()['Subscriber']
+    return cust, subs
 
 
 def gender(city_file, month, day):
-    '''TODO: fill out docstring with description, arguments, and return values.
-    Question: What are the counts of gender?
+    '''returns the counts of each gender ('Female' or 'Male')
+    for a specificed city and a predetermined time period
+
+    args:
+        1. (str) filename for a city's bikeshare data
+        2. (str) selected month for a city's bikeshare data
+        3. (str) selected day for a city's bikeshare data
+    returns:
+        1. (int) the count of 'Female'
+        2. (int) the count of 'Male'
     '''
-    # TODO: complete function
+
+    df = df_filter(city_file, month, day)
+    female = df['Gender'].value_counts()['Female']
+    male = df['Gender'].value_counts()['Male']
+    return female, male
 
 
 def birth_years(city_file, month, day):
-    '''TODO: fill out docstring with description, arguments, and return values.
-    Question: What are the earliest, most recent, and most popular birth years?
-    '''
-    # TODO: complete function
-
-
-def display_data():
-    '''Displays five lines of data if the user specifies that they would like to.
-    After displaying five lines, ask the user if they would like to see five more,
-    continuing asking until they say stop.
+    '''returns the earliest, most recent, and most popular birth years
+    for a specificed city and a predetermined time period
 
     args:
-        none.
-    Returns:
-        TODO: fill out return type and description (see get_city for an example)
+        1. (str) filename for a city's bikeshare data
+        2. (str) selected month for a city's bikeshare data
+        3. (str) selected day for a city's bikeshare data
+    returns:
+        1. (int) the oldest or the earliest birth year
+        2. (int) the youngest or most recent birth year
+        3. (int) the mode or most popular birth year
     '''
 
-    msg = "\nWould you like to view individual trip data? Type 'yes' or 'no'.\n"
+    df = df_filter(city_file, month, day)
+    oldest = int(df['Birth Year'].min())
+    youngest = int(df['Birth Year'].max())
+    mode = int(df['Birth Year'].mode().iloc[0])
+    return oldest, youngest, mode
+
+
+def display_data(city_file):
+    '''displays five lines of data if the user specifies that they would
+    like to and continues to ask the user whether to see five more until 'no'
+
+    args:
+        (str) filename for a city's bikeshare data
+    Returns:
+        none
+    '''
+
+    msg = "\n\nWould you like to view individual trip data? Type 'yes' or 'no'.\n"
     display = input(msg)
+    if display == 'yes': # start the sequence of work only if user enters 'yes'
+        df = df_filter(city_file, None, None)
+        loc = 0
     while display == 'yes':
+        print(df[loc:loc + 5])
         display = input(msg)
-    # TODO: handle raw input and complete function
+        loc += 5
 
 
 def timer(start_time):
@@ -279,6 +317,7 @@ def timer(start_time):
     Returns:
         none
     '''
+
     print("\n\nThat took %s seconds." % (time.time() - start_time))
     print("Calculating the next statistic...")
 
@@ -294,28 +333,31 @@ def df_filter(city_file, month, day):
     Returns:
         (pandas dataframe) filtered dataframe
     '''
+
     df = pd.read_csv(city_file)
-    df['Month'] = pd.to_datetime(df['Start Time']).apply(lambda x: x.strftime("%B"))
-    df['Day'] = pd.to_datetime(df['Start Time']).apply(lambda x: x.strftime("%d"))
     if month != None:
+        df['Month'] = pd.to_datetime(df['Start Time']).apply(
+                        lambda x: x.strftime("%B"))
         df = df[df['Month'] == months[int(month)]]
     if day != None:
+        df['Day'] = pd.to_datetime(df['Start Time']).apply(
+                        lambda x: x.strftime("%d"))
         df = df[df['Day'] == day]
     return df
 
 
 def statistics():
-    '''calculates and prints out the descriptive statistics about a city and time period
-    specified by the user via raw input
+    '''calculates and prints out the descriptive statistics about a city
+    and time period specified by the user via raw input
 
     args:
         none
     Returns:
         none
     '''
+
     # Filter by city (Chicago, New York, Washington)
     city = get_city()
-    # print(city)
 
     # Filter by time period (month, day, none)
     time_period, month, day = get_time_period()
@@ -333,7 +375,7 @@ def statistics():
         print(popular_month(city))
         timer(start_time)
 
-    # What is the most popular day of week (Monday, Tuesday, etc.) for start time?
+    # What is the most popular day of week (Monday, Tuesday...) for start time?
     if time_period == 'none' or time_period == 'month':
         start_time = time.time()
         print("\n\nThe most popular day of week for {} is...".format(month_str))
@@ -366,7 +408,6 @@ def statistics():
     timer(start_time)
 
     # What is the most popular start station and most popular end station?
-    # TODO: call popular_stations function and print the results
     start_time = time.time()
     start_station, end_station = popular_stations(city, month, day)
     print("\n\nThe most popular start station is...\n{}".format(start_station))
@@ -374,34 +415,43 @@ def statistics():
     timer(start_time)
 
     # What is the most popular trip?
-    # TODO: call popular_trip function and print the results
     start_time = time.time()
     pop_trip = popular_trip(city, month, day)
     print("\n\nThe most popular trip is...\n{}".format(pop_trip))
-
     timer(start_time)
 
-    # What are the counts of each user type?
-    # TODO: call users function and print the results
+    # What are the counts of each user type? 'Customer' or 'Subscriber'
     start_time = time.time()
+    num_cust, num_subs = users(city, month, day)
+    print("\n\nThe count of customers is...\n{}".format(num_cust))
+    print("\nThe count of subscribers is...\n{}".format(num_subs))
     timer(start_time)
 
     # What are the counts of gender?
-    # TODO: call gender function and print the results
     start_time = time.time()
+    num_female, num_male = gender(city, month, day)
+    print("\n\nThe count of female among subscribers is...\n{}".format(
+            num_female))
+    print("\nThe count of male among subscribers is...\n{}".format(
+            num_male))
     timer(start_time)
 
-
     # What are the earliest, most recent, and most popular birth years?
-    # TODO: call birth_years function and print the results
     start_time = time.time()
-    print("\nThat took %s seconds." % (time.time() - start_time))
+    oldest, youngest, birth_years_mode = birth_years(city, month, day)
+    print("\n\nThe earliest birth year among subscribers is...\n{}".format(
+            oldest))
+    print("\n\nThe most recent birth year among subscribers is...\n{}".format(
+            youngest))
+    print("\n\nThe most popular birth year among subscribers is...\n{}".format(
+            birth_years_mode))
+    print("\n\nThat took %s seconds." % (time.time() - start_time))
 
-    # Display five lines of data at a time if user specifies that they would like to
-    display_data()
+    # Display five lines of data at a time if user would like to
+    display_data(city)
 
     # Restart?
-    restart = input("\nWould you like to restart? Type 'yes' or 'no'.\n")
+    restart = input("\n\nWould you like to restart? Type 'yes' or 'no'.\n")
     if restart.lower() == 'yes':
         statistics()
 
