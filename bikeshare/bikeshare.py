@@ -107,7 +107,7 @@ def get_day(month):
         return '01'
 
 
-def popular_month(city_file):
+def popular_month(df):
     '''returns the most popular month for start time for a specified city
     and time period
 
@@ -118,7 +118,6 @@ def popular_month(city_file):
 
     '''
 
-    df = pd.read_csv(city_file)
     df['Month - Start Time'] = df['Start Time'].str[5:7]
     # lists only the first item of the mode list
     # area for improvement: lists multiple popular months if tied
@@ -127,7 +126,7 @@ def popular_month(city_file):
     return popular_month_str
 
 
-def popular_day(city_file, month):
+def popular_day(df):
     '''returns the most popular day of the week (Monday, Tuesday, etc.) for a
     specificed city only if time period is unfiltered or filtered only by month
 
@@ -140,19 +139,14 @@ def popular_day(city_file, month):
         (str) name for the most popular day of the week for start time
     '''
 
-    df = pd.read_csv(city_file)
     df['Day of Week'] = pd.to_datetime(df['Start Time']).apply(
                             lambda x: x.weekday())
-    df['Month'] = pd.to_datetime(df['Start Time']).apply(
-                            lambda x: x.strftime("%B"))
-    if month != None:
-        df = df[df['Month'] == months[int(month)]]
     popular_day_int = df['Day of Week'].mode().iloc[0]
     popular_day_str = weekdays[popular_day_int] # 0 = Monday, 6 = Saturday
     return popular_day_str
 
 
-def popular_hour(city_file, month, day):
+def popular_hour(df):
     '''returns the most popular hour of day for a specificed city and a
     predetermined time period
 
@@ -164,13 +158,12 @@ def popular_hour(city_file, month, day):
         (str) the most popular hour of day for start time
     '''
 
-    df = df_filter(city_file, month, day)
     df['Hour - Start Time'] = df['Start Time'].str[-8:-6]
     popular_hour_str = str(df['Hour - Start Time'].mode().iloc[0])
     return popular_hour_str
 
 
-def trip_duration(city_file, month, day):
+def trip_duration(df):
     '''returns the total trip duration and average trip duration for
     a specificed city and a predetermined time period
 
@@ -183,13 +176,12 @@ def trip_duration(city_file, month, day):
         2. (float) the average trip duration for the city over the time period
     '''
 
-    df = df_filter(city_file, month, day)
     total = df['Trip Duration'].sum()
     average = df['Trip Duration'].mean()
     return total, average
 
 
-def popular_stations(city_file, month, day):
+def popular_stations(df):
     '''returns the most popular start station and most popular end station
     for a specificed city and a predetermined time period
 
@@ -204,13 +196,12 @@ def popular_stations(city_file, month, day):
                 the city over the time period
     '''
 
-    df = df_filter(city_file, month, day)
     start = df['Start Station'].mode().iloc[0]
     end = df['End Station'].mode().iloc[0]
     return start, end
 
 
-def popular_trip(city_file, month, day):
+def popular_trip(df):
     '''returns the most popular trip, defined here as having the same start
     and end stations, for a specificed city and a predetermined time period
 
@@ -223,13 +214,12 @@ def popular_trip(city_file, month, day):
         for the city over the time period
     '''
 
-    df = df_filter(city_file, month, day)
     df['Trip'] = 'FROM: ' + df['Start Station'] + '\nTO:   ' + df['End Station']
     trip = df['Trip'].mode().iloc[0]
     return trip
 
 
-def users(city_file, month, day):
+def users(df):
     '''returns the counts of each user type ('Customer' or 'Subscriber')
     for a specificed city and a predetermined time period
 
@@ -242,13 +232,12 @@ def users(city_file, month, day):
         2. (int) the count of 'Subscriber'
     '''
 
-    df = df_filter(city_file, month, day)
     cust = df['User Type'].value_counts()['Customer']
     subs = df['User Type'].value_counts()['Subscriber']
     return cust, subs
 
 
-def gender(city_file, month, day):
+def gender(df):
     '''returns the counts of each gender ('Female' or 'Male')
     for a specificed city and a predetermined time period
 
@@ -261,13 +250,12 @@ def gender(city_file, month, day):
         2. (int) the count of 'Male'
     '''
 
-    df = df_filter(city_file, month, day)
     female = df['Gender'].value_counts()['Female']
     male = df['Gender'].value_counts()['Male']
     return female, male
 
 
-def birth_years(city_file, month, day):
+def birth_years(df):
     '''returns the earliest, most recent, and most popular birth years
     for a specificed city and a predetermined time period
 
@@ -281,7 +269,6 @@ def birth_years(city_file, month, day):
         3. (int) the mode or most popular birth year
     '''
 
-    df = df_filter(city_file, month, day)
     oldest = int(df['Birth Year'].min())
     youngest = int(df['Birth Year'].max())
     mode = int(df['Birth Year'].mode().iloc[0])
@@ -361,6 +348,13 @@ def statistics():
 
     # Filter by time period (month, day, none)
     time_period, month, day = get_time_period()
+
+    # instead of opening the city's bikeshare data and loading it into dataframe
+    # when each function is called, this will be done once here and the
+    # dataframe will be passed as an argument for each subsequent function.
+    # note that the returned dataframe will be filtered already.
+    df = df_filter(city, month, day)
+
     if month != None:
         month_str = datetime.date(2018, int(month), 1).strftime('%B')
     else:
@@ -372,14 +366,14 @@ def statistics():
     if time_period == 'none':
         start_time = time.time()
         print("\n\nThe most popular month for start time is...")
-        print(popular_month(city))
+        print(popular_month(df))
         timer(start_time)
 
     # What is the most popular day of week (Monday, Tuesday...) for start time?
     if time_period == 'none' or time_period == 'month':
         start_time = time.time()
         print("\n\nThe most popular day of week for {} is...".format(month_str))
-        print(popular_day(city, month))
+        print(popular_day(df))
         timer(start_time)
 
     if day != None: # prints out the date selected by user
@@ -390,12 +384,12 @@ def statistics():
     # What is the most popular hour of day for start time?
     start_time = time.time()
     print("\n\nThe most popular hour of day is...")
-    print(popular_hour(city, month, day))
+    print(popular_hour(df))
     timer(start_time)
 
     # What is the total trip duration and average trip duration?
     start_time = time.time()
-    total, average = trip_duration(city, month, day)
+    total, average = trip_duration(df)
     total = int(total)
     hours = total // 3600
     minutes = (total % 3600) // 60
@@ -409,42 +403,50 @@ def statistics():
 
     # What is the most popular start station and most popular end station?
     start_time = time.time()
-    start_station, end_station = popular_stations(city, month, day)
+    start_station, end_station = popular_stations(df)
     print("\n\nThe most popular start station is...\n{}".format(start_station))
     print("\nThe most popular end station is...\n{}".format(end_station))
     timer(start_time)
 
     # What is the most popular trip?
     start_time = time.time()
-    pop_trip = popular_trip(city, month, day)
+    pop_trip = popular_trip(df)
     print("\n\nThe most popular trip is...\n{}".format(pop_trip))
     timer(start_time)
 
     # What are the counts of each user type? 'Customer' or 'Subscriber'
     start_time = time.time()
-    num_cust, num_subs = users(city, month, day)
+    num_cust, num_subs = users(df)
     print("\n\nThe count of customers is...\n{}".format(num_cust))
     print("\nThe count of subscribers is...\n{}".format(num_subs))
     timer(start_time)
 
     # What are the counts of gender?
     start_time = time.time()
-    num_female, num_male = gender(city, month, day)
-    print("\n\nThe count of female among subscribers is...\n{}".format(
-            num_female))
-    print("\nThe count of male among subscribers is...\n{}".format(
-            num_male))
+    if city == washington:
+        print("\n\nUnfortunately, gender data for Washington subscribers "
+                "are not available.")
+    else:
+        num_female, num_male = gender(df)
+        print("\n\nThe count of female among subscribers is...\n{}".format(
+                num_female))
+        print("\nThe count of male among subscribers is...\n{}".format(
+                num_male))
     timer(start_time)
 
     # What are the earliest, most recent, and most popular birth years?
     start_time = time.time()
-    oldest, youngest, birth_years_mode = birth_years(city, month, day)
-    print("\n\nThe earliest birth year among subscribers is...\n{}".format(
-            oldest))
-    print("\n\nThe most recent birth year among subscribers is...\n{}".format(
-            youngest))
-    print("\n\nThe most popular birth year among subscribers is...\n{}".format(
-            birth_years_mode))
+    if city == washington:
+        print("\n\nUnfortunately, birth year data for Washington subscribers "
+                "are not available.")
+    else:
+        oldest, youngest, birth_years_mode = birth_years(df)
+        print("\n\nThe earliest birth year among subscribers is...\n{}".format(
+                oldest))
+        print("\n\nThe most recent birth year among subscribers is...\n{}".format(
+                youngest))
+        print("\n\nThe most popular birth year among subscribers is...\n{}".format(
+                birth_years_mode))
     print("\n\nThat took %s seconds." % (time.time() - start_time))
 
     # Display five lines of data at a time if user would like to
