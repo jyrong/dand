@@ -25,15 +25,14 @@ def get_city():
                     'Would you like to see data for Chicago, New York,'
                     ' or Washington?\n')
     if city.title() == 'Chicago':
-        city = chicago
+        return chicago
     elif city.title() == 'New York':
-        city = new_york_city
+        return new_york_city
     elif city.title() == 'Washington':
-        city = washington
+        return washington
     else:
-        print("Oops...I didn't quite get that. Let's assume New York")
-        city = new_york_city
-    return city
+        print("Oops...I didn't quite get that. Let's try again!")
+        return get_city()
 
 
 def get_time_period():
@@ -57,15 +56,17 @@ def get_time_period():
 
     if time_period.lower() == 'month':
         month = get_month()
+        return time_period, month, day
     elif time_period.lower() == 'day':
         month = get_month()
         day = get_day(month)
-    elif time_period.lower() != 'none':
-        print("Oops...I didn't quite get that. Let's assume 'May 1st'!")
-        month = '05'
-        day = '01'
+        return time_period, month, day
+    elif time_period.lower() == 'none':
+        return time_period, month, day
+    else:
+        print("Oops...I didn't quite get that. Let's try again!")
+        return get_time_period()
 
-    return time_period, month, day
 
 def get_month():
     '''asks the user for a month and returns the specified month
@@ -78,11 +79,11 @@ def get_month():
 
     month = input('\nWhich month? January, February, March, April, May,'
                     ' or June?\n')
-    if month.title() in months:
+    if month.title() in months[:7]:
         return str(months.index(month.title())).zfill(2)
     else:
-        print("Oops...I didn't quite get that. Let's assume 'May'!")
-        return '05'
+        print("Oops...I didn't quite get that. Let's try again!")
+        return get_month()
 
 
 def get_day(month):
@@ -94,17 +95,17 @@ def get_day(month):
         (str) day in the form of two-digit number in string format
     '''
 
-    err_msg = "Oops...I didn't quite get that. Let's assume '01'!"
+    err_msg = "Oops...I didn't quite get that. Let's try again!"
     try:
         day = int(input('\nWhich day? Please enter an integer.\n'))
     except:
         print(err_msg)
-        return '01'
+        return get_day(month)
     if 1 <= day <= num_days[int(month) - 1]:
         return str(day).zfill(2)
     else:
         print(err_msg)
-        return '01'
+        return get_day(month)
 
 
 def popular_month(df):
